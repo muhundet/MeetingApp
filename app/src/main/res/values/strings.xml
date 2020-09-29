@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">MeetingApp</string>
+    <string name="tab_text_1">Scheduled Meetings</string>
+    <string name="tab_text_2">Previous Meetings</string>
+
+    <string name="view_meetings">Upcoming Meetings</string>
+    <string name="create_meeting">Create Meeting</string>
+    <string name="view_register">Previous Meetings</string>
+    <string name="Exit">Exit</string>
+    <string name="menu_view_meetings">Upcoming Meetings</string>
+    <string name="menu_gallery">Create Meetings</string>
+    <string name="menu_slideshow">Previous Meetings</string>
+    <string name="agenda">Agenda</string>
+    <string name="venue">Venue</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="meetingid">MeetingID</string>
+    <string name="scan_employee_qr">Scan Employee QR</string>
+    <string name="view_meeting_register">View Meeting Register</string>
+    <string name="edit_meeting_details">Edit Meeting Details</string>
+
+    <string name="remove_meeting">REMOVE MEETING</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

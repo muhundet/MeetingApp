@@ -1,0 +1,3 @@
+include ':mobilertc'
+include ':app'
+rootProject.name = "MeetingApp"
