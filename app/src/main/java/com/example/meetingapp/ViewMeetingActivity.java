@@ -23,6 +23,7 @@ import com.example.meetingapp.models.Meeting;
 import com.example.meetingapp.zoom.InitAuthSDKCallback;
 import com.example.meetingapp.zoom.InitAuthSDKHelper;
 import com.example.meetingapp.zoom.JoinMeetingHelper;
+import com.example.meetingapp.zoom.ZoomMeetingUISettingHelper;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -35,6 +36,7 @@ import java.util.Date;
 import us.zoom.sdk.MeetingService;
 import us.zoom.sdk.MeetingStatus;
 import us.zoom.sdk.StartMeetingOptions;
+import us.zoom.sdk.StartMeetingParams4NormalUser;
 import us.zoom.sdk.ZoomApiError;
 import us.zoom.sdk.ZoomSDK;
 import us.zoom.sdk.ZoomSDKAuthenticationListener;
@@ -223,8 +225,18 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
                 if (zoomSDK.isLoggedIn()) {
                     Log.d("ZOOM", ">>>>>>>>>>>Zoom login sucessful<<<<<<<<<<<<<<<<<<<<<<<");
                     MeetingService meetingService = zoomSDK.getMeetingService();
-                    StartMeetingOptions options = new StartMeetingOptions();
-                    meetingService.startInstantMeeting(this, options);
+
+
+                    if(meetingService == null) {
+                        Log.d("ZOOM", ">>>>>>>>>>>Zoom login sucessful<<<<<<<<<<<<<<<<<<<<<<<");
+                    }
+
+                    StartMeetingOptions opts = ZoomMeetingUISettingHelper.getStartMeetingOptions();
+                    opts.no_video=false;
+
+                    StartMeetingParams4NormalUser params = new StartMeetingParams4NormalUser();
+                    params.meetingNo = zoomMeetingID;
+                     meetingService.startMeetingWithParams(this, params, opts);
 
                 }else {
 

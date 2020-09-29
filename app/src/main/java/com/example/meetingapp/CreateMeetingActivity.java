@@ -180,7 +180,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
                     }
 
                     Log.d("ZOOM", ">>>>>>>>>>>>Now going to save database: ZoomID =" + mZoomMeetingID +"<<<<<<<<<<<<<<<<<<<<<<<");
-                    insertMeetings(new MeetingsOpenHelper(CreateMeetingActivity.this));
                     //                      textMeetingId.setText(null);
                     textAgenda.setText(null);
                     textVenue.setText(null);
@@ -306,7 +305,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
                         mPreMeetingService.addListener(this);
                         PreMeetingService.ScheduleOrEditMeetingError error = mPreMeetingService.scheduleMeeting(meetingItem);
-                        Log.d("ZOOM", ">>>>>>>>>>>>Zoom Meeting Scheduled<<<<<<<<<<<<<<<<<<<<<<<");
+                        Log.d("ZOOM", ">>>>>>>>>>>>Zoom Meeting Being Scheduled<<<<<<<<<<<<<<<<<<<<<<<");
                         if (error == PreMeetingService.ScheduleOrEditMeetingError.SUCCESS) {
 //                          btnSchedule.setEnabled(false);
                             Log.d("ZOOM", ">>>>>>>>>>>>PreMeetingService successiful<<<<<<<<<<<<<<<<<<<<<<<");
@@ -342,9 +341,10 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
     public void onScheduleMeeting(int result, long meetingNumber) {
         if (result == PreMeetingError.PreMeetingError_Success) {
             mZoomMeetingID = meetingNumber;
+            insertMeetings(new MeetingsOpenHelper(CreateMeetingActivity.this));
             Log.d("ZOOM", ">>>>>>>>>>>>Schedule successful with unique meetingNumber <<<<<<<<<<<<<<<<<<<<<<<");
             Toast.makeText(this, "Schedule successfully. Meeting's unique id is " + meetingNumber, Toast.LENGTH_LONG).show();
-            finish();
+
         } else {
             Toast.makeText(this, "Schedule failed result code =" + result, Toast.LENGTH_LONG).show();
             Log.d("ZOOM", ">>>>>>>>>>>>Schedule fail<<<<<<<<<<<<<<<<<<<<<<<");
