@@ -170,6 +170,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
                     }else{
                         mZoomMeetingID = 0;
+
                     }
                     if(chkScheduleTeams.isChecked()){
                         mIsTeamsEnabled =true;
@@ -177,6 +178,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
                         Toast.makeText(CreateMeetingActivity.this, "Teams meeting schedule enabled ", Toast.LENGTH_LONG).show();
                     }else{
                         mTeamsMeetingID = 0;
+
                     }
 
                     Log.d("ZOOM", ">>>>>>>>>>>>Now going to save database: ZoomID =" + mZoomMeetingID +"<<<<<<<<<<<<<<<<<<<<<<<");
@@ -247,14 +249,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
             ZoomSDK.getInstance().addAuthenticationListener(this);
             Log.d("ZOOM", ">>>>>>>>>>>>Email Log in success <<<<<<<<<<<<<<<<<<<<<<<");
         }else{
-
-
-
-
-
-
-
-
 
             Log.d("ZOOM", ">>>>>>>>>>>>Zoom API ERROR, Failure to login with zoom <<<<<<<<<<<<<<<<<<<<<<<");
         }

@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.example.meetingapp.database.MeetingsDatabaseContract;
 import com.example.meetingapp.database.MeetingsOpenHelper;
 import com.example.meetingapp.models.Meeting;
+import com.example.meetingapp.models.ZoomParticipants;
 import com.example.meetingapp.zoom.InitAuthSDKCallback;
 import com.example.meetingapp.zoom.InitAuthSDKHelper;
 import com.example.meetingapp.zoom.JoinMeetingHelper;
@@ -32,7 +33,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.List;
 
+import retrofit.RetrofitInstance;
+import retrofit.RetrofitInterface;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import us.zoom.sdk.JoinMeetingOptions;
+import us.zoom.sdk.JoinMeetingParams;
 import us.zoom.sdk.MeetingService;
 import us.zoom.sdk.MeetingStatus;
 import us.zoom.sdk.StartMeetingOptions;
@@ -95,6 +104,7 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
         btnViewRegister = findViewById(R.id.btnViewRegister);
         btnStartZoomMeeting = findViewById(R.id.btnStartAZoom);
         btnJoinZoomMeeting = findViewById(R.id.btnJoinZoomMeeting);
+        btnEndZoomMeeting = findViewById(R.id.btnEndZoomMeeting);
         qrScan = new IntentIntegrator(this);
 //        qrScan.initiateScan();
 
@@ -118,13 +128,20 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
             @Override
             public void onClick(View v) {
                 //kunoda meeting id inobva paParcel remeeting ino, nePassword iri pakukokwa #hope
+                createjoinDialog();
+            }
+        });
+
+        btnEndZoomMeeting.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
         btnEditMeeting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Toast.makeText(ViewMeetingActivity.this, "Edit meeting", Toast.LENGTH_LONG).show();
             }
         });
@@ -179,37 +196,49 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
         readMeetings(new MeetingsOpenHelper(this));
     }
 
-    private void joinZoomMeeting(String meetingNoArg, String zoomMeetingPasswordArg){
-        String meetingNo = "";
-        String meetingPassword = "";
+    private void joinZoomMeeting(String zoomMeetingNo, String zoomMeetingPassword){
+        InitAuthSDKHelper.getInstance().initSDK(this, this);
+        //String vanityId = mEdtVanityId.getText().toString().trim();
 
-        if (meetingNo.length() == 0 ) {
-            Toast.makeText(this, "You need to enter a meeting number", Toast.LENGTH_LONG).show();
-            return;
+        if (zoomMeetingNo.length() == 0 && zoomMeetingPassword.length()== 0 ) {
+            Toast.makeText(this, "You need to enter a meeting number and Password", Toast.LENGTH_LONG).show();
+
+        }else{
+            ZoomSDK zoomSDK = ZoomSDK.getInstance();
+            if (zoomSDK.isInitialized()) {
+                //                            mCountry = ZoomSDK.getInstance().getAccountService().getAvailableDialInCountry();
+                if (zoomSDK.isLoggedIn()) {
+                    Log.d("ZOOM", ">>>>>>>>>>>Zoom login sucessful<<<<<<<<<<<<<<<<<<<<<<<");
+                    MeetingService meetingService = zoomSDK.getMeetingService();
+
+
+                    if(meetingService == null) {
+                        Log.d("ZOOM", ">>>>>>>>>>>Zoom login sucessful<<<<<<<<<<<<<<<<<<<<<<<");
+                    }
+
+                    JoinMeetingOptions opts =ZoomMeetingUISettingHelper.getJoinMeetingOptions();
+
+                    JoinMeetingParams params = new JoinMeetingParams();
+
+                    params.displayName = "DISPLAY_NAME";
+                    params.meetingNo = zoomMeetingNo;
+                    params.password = zoomMeetingPassword;
+                    meetingService.joinMeetingWithParams(this, params,opts);
+
+                }else {
+                    createLoginDialog();
+                    Log.d("ZOOM", ">>>>>>>>>>>>User not Logged in to Dialog create meeting<<<<<<<<<<<<<<<<<<<<<<<");
+                }
+
+            }else {
+                Log.d("ZOOM", ">>>>>>>>>>>> SDK Not Initialized<<<<<<<<<<<<<<<<<<<<<<<");
+            }
         }
-
-        if (meetingNo.length() != 0 ) {
-            Toast.makeText(this, " meeting number ", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        ZoomSDK zoomSDK = ZoomSDK.getInstance();
-
-        if (!zoomSDK.isInitialized()) {
-            Toast.makeText(this, "ZoomSDK has not been initialized successfully", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        MeetingService meetingService = zoomSDK.getMeetingService();
-
-
-        int ret = -1;
-
-
-        ret = JoinMeetingHelper.getInstance().joinMeetingWithNumber(this, meetingNo, meetingPassword);
-
-        Log.i("TAG", "onClickBtnJoinMeeting, ret=" + ret);
     }
+
+
+
+
 
     private void startZoomMeeting(String zoomMeetingID) {
         InitAuthSDKHelper.getInstance().initSDK(this, this);
@@ -278,6 +307,40 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
         }
     }
 
+    private void createjoinDialog() {
+        new AlertDialog.Builder(this).setView(R.layout.dialog_join).setPositiveButton("JOIN MEETING ", new DialogInterface.OnClickListener() {@Override
+        public void onClick(DialogInterface dialogInterface, int i) {
+            AlertDialog dialog = (AlertDialog) dialogInterface;
+            TextInputEditText meetingIDInput = dialog.findViewById(R.id.join_input);
+            TextInputEditText passwordInput = dialog.findViewById(R.id.pw_input);
+            if (meetingIDInput != null && meetingIDInput.getText() != null && passwordInput != null && passwordInput.getText() != null) {
+                String meetingID = meetingIDInput.getText().toString();
+                String password = passwordInput.getText().toString();
+                if (meetingID.trim().length() > 0 && password.trim().length() > 0) {
+                    joinZoomMeeting(meetingID, password);
+                }
+            }
+            dialog.dismiss();
+        }
+        }).show();
+    }
+
+    public void endZoomMeeting(){
+        RetrofitInterface retrofitInterface = RetrofitInstance.getRetrofitInstance().create(RetrofitInterface.class);
+        Call<List<ZoomParticipants>> listCall = retrofitInterface.getZoomParticipants();
+        listCall.enqueue(new Callback<List<ZoomParticipants>>() {
+            @Override
+            public void onResponse(Call<List<ZoomParticipants>> call, Response<List<ZoomParticipants>> response) {
+//                parseData(response.body());
+
+            }
+
+            @Override
+            public void onFailure(Call<List<ZoomParticipants>> call, Throwable t) {
+
+            }
+        });
+    }
     private void initialiseViews() {
         Intent intent = getIntent();
         Meeting meeting = intent.getParcelableExtra("meeting");
