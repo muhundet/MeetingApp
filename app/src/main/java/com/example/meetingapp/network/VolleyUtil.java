@@ -1,4 +1,4 @@
-package com.example.geodatacollector.network;
+package com.example.meetingapp.network;
 
 import android.content.Context;
 

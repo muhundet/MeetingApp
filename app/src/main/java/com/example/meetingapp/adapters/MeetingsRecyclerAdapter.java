@@ -21,7 +21,7 @@ public class MeetingsRecyclerAdapter extends RecyclerView.Adapter<MeetingsRecycl
 
     ArrayList<Meeting> meetings;
 
-    public MeetingsRecyclerAdapter(ArrayList meetings) {
+    public MeetingsRecyclerAdapter(ArrayList<Meeting> meetings) {
         this.meetings = meetings;
     }
     @NonNull

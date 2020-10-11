@@ -54,8 +54,5 @@ public class Meeting implements Parcelable {
         dest.writeString(meetingTime);
     }
 
-
-
-
 }
 

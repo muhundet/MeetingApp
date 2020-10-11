@@ -1,6 +1,7 @@
 package com.example.meetingapp;
 
 
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,20 +27,31 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.example.meetingapp.date_time_fragments.DatePickerFragment;
 import com.example.meetingapp.date_time_fragments.TimePickerFragment;
 import com.example.meetingapp.database.MeetingsDatabaseContract;
 import com.example.meetingapp.database.MeetingsOpenHelper;
+import com.example.meetingapp.network.VolleyUtil;
 import com.example.meetingapp.zoom.AuthConstants;
 import com.example.meetingapp.zoom.InitAuthSDKCallback;
 import com.example.meetingapp.zoom.InitAuthSDKHelper;
 import com.google.android.material.textfield.TextInputEditText;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import us.zoom.sdk.AccountService;
@@ -78,8 +90,6 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
     Calendar calendar = Calendar.getInstance();
     TimePickerDialog.OnTimeSetListener timeSetListener;
-    private AccountService mAccountService;
-    private PreMeetingService mPreMeetingService = null;
     private long mTeamsMeetingID;
     ZoomSDK mZoomSDK;
 
@@ -151,12 +161,12 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
             @Override
             public void onClick(View v) {
                 mMeetingId = "MEETINGID" + textMeetingDate.getText().toString() + textMeetingTime.getText().toString();
-                mAgenda = textAgenda.getText().toString();
-                mVenue = textVenue.getText().toString();
-                mMeetingDate = textMeetingDate.getText().toString();
-                mMeetingTime = textMeetingTime.getText().toString();
+                mAgenda = textAgenda.getText().toString().trim();
+                mVenue = textVenue.getText().toString().trim();
+                mMeetingDate = textMeetingDate.getText().toString().trim();
+                mMeetingTime = textMeetingTime.getText().toString().trim();
 
-                if(mMeetingId.equals("") && mAgenda.equals("") && mVenue.equals("") && mMeetingDate == null && mMeetingTime.equals("")) {
+                if(mMeetingId.length()<= 0 && mAgenda.length()<= 0 && mVenue.length()<= 0 && mMeetingDate.length()<= 0 && mMeetingTime.length()<= 0) {
                     Toast.makeText(CreateMeetingActivity.this, "Make sure you have entered all meeting details ", Toast.LENGTH_LONG).show();
                 }else {
                     if(chkScheduleZoom.isChecked()){
@@ -278,16 +288,16 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
         ZoomSDK zoomSDK = ZoomSDK.getInstance();
         if (zoomSDK.isInitialized()) {
-            mAccountService = ZoomSDK.getInstance().getAccountService();
-            mPreMeetingService = ZoomSDK.getInstance().getPreMeetingService();
+            AccountService accountService = ZoomSDK.getInstance().getAccountService();
+            PreMeetingService preMeetingService = ZoomSDK.getInstance().getPreMeetingService();
             Log.d("ZOOM", ">>>>>>>>>>>>Account Service, PremeetingService Populated<<<<<<<<<<<<<<<<<<<<<<<");
 //                            mCountry = ZoomSDK.getInstance().getAccountService().getAvailableDialInCountry();
-            if (mAccountService == null || mPreMeetingService == null) {
+            if (accountService == null || preMeetingService == null) {
                 Log.d("ZOOM", ">>>>>>>>>>>>AccountService and PreMeetingService null<<<<<<<<<<<<<<<<<<<<<<<");
 
             }
                 if (zoomSDK.isLoggedIn()) {
-                    MeetingItem meetingItem = mPreMeetingService.createScheduleMeetingItem();
+                    MeetingItem meetingItem = preMeetingService.createScheduleMeetingItem();
                     meetingItem.setMeetingTopic(topic);
                     meetingItem.setStartTime(zoomTimeFrom);
                     meetingItem.setDurationInMinutes(30);
@@ -297,8 +307,8 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
                     Log.d("ZOOM", ">>>>>>>>>>>>Meeting Item populated success<<<<<<<<<<<<<<<<<<<<<<<");
                     registerListener();
 
-                        mPreMeetingService.addListener(this);
-                        PreMeetingService.ScheduleOrEditMeetingError error = mPreMeetingService.scheduleMeeting(meetingItem);
+                        preMeetingService.addListener(this);
+                        PreMeetingService.ScheduleOrEditMeetingError error = preMeetingService.scheduleMeeting(meetingItem);
                         Log.d("ZOOM", ">>>>>>>>>>>>Zoom Meeting Being Scheduled<<<<<<<<<<<<<<<<<<<<<<<");
                         if (error == PreMeetingService.ScheduleOrEditMeetingError.SUCCESS) {
 //                          btnSchedule.setEnabled(false);
@@ -448,6 +458,61 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
     public void onMeetingStatusChanged(MeetingStatus meetingStatus, int i, int i1) {
 
     }
+
+    private void saveMeetingToServer() {
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Saving Geo Data...");
+        progressDialog.show();
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_SAVE_GEO_DATA,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        progressDialog.dismiss();
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                //if there is a success
+                                //storing the name to sqlite with status synced
+//                                saveNameToLocalStorage(mImage, mGeoDate, mGeoTime, mLatitude, mLongitude, mAltitude, GEO_DATA_SYNCED_WITH_SERVER);
+                                Log.i("TAG", ">>>>>>>>>>>>Geo data saved to local and synced = 1: SAVED TO SERVER<<<<<<<<<<<<<" );
+                            } else {
+                                //if there is some error
+                                //saving the name to sqlite with status unsynced
+//                                saveNameToLocalStorage(mImage, mGeoDate, mGeoTime, mLatitude, mLongitude, mAltitude, GEO_DATA_NOT_SYNCED_WITH_SERVER);
+                                Log.i("TAG", ">>>>>>>>>>>>Geo data saved to local and synced = 0: NOT SAVED TO SERVER<<<<<<<<<<<<<" );
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        progressDialog.dismiss();
+                        //on error storing the name to sqlite with status unsynced
+//                        saveNameToLocalStorage(mImage, mGeoDate, mGeoTime, mLatitude, mLongitude, mAltitude, GEO_DATA_NOT_SYNCED_WITH_SERVER);
+                        Log.i("TAG", ">>>>>>>>>>>>Geo data saved to local and synced = 0: NOT SAVED TO SERVER: VOLLEY ERR<<<<<<<<<<<<<" );
+                        Log.e("HttpClient", "error: " + error.toString());
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("image", mImage);
+                params.put("date", mGeoDate);
+                params.put("time", mGeoTime);
+                params.put("latitude", String.valueOf(mLatitude));
+                params.put("longitude", String.valueOf(mLongitude));
+                params.put("altitude", String.valueOf(mAltitude));
+                return params;
+            }
+        };
+
+        VolleyUtil.getInstance(this).addToRequestQueue(stringRequest);
+    }
+
 
 }
 

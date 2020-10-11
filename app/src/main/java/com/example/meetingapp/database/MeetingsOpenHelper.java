@@ -1,6 +1,7 @@
 package com.example.meetingapp.database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -26,5 +27,31 @@ public class MeetingsOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
+    }
+
+    public Cursor getUnsyncedMeetingData() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        final String [] meetingColumns = {
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_MEETING_ID,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_AGENDA,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_VENUE,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_DATE,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_START_TIME,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_ZOOM_MEETING_ID,
+                MeetingsDatabaseContract.MeetingsEntry.COLUMN_ZOOM_MEETING_PASSWORD};
+
+        String selection = MeetingsDatabaseContract.MeetingsEntry.COLUMN_MEETING_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(0)};
+
+
+        final Cursor meetingsEntryCursor = db.query(MeetingsDatabaseContract.MeetingsEntry.TABLE_NAME,
+                meetingColumns,
+                selection, selectionArgs, null, null, null);
+
+        return meetingsEntryCursor;
+    }
+
+    public Cursor getUnsyncedRegister(){
+        return
     }
 }

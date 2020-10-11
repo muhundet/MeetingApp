@@ -15,6 +15,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.example.geodatacollector.database.GeoDataBaseHelper;
 import com.example.geodatacollector.database.GeoDatabaseContract;
 import com.example.geodatacollector.ui.collect_geo_data.CollectGeoDataFragment;
+import com.example.meetingapp.database.MeetingsDatabaseContract;
+import com.example.meetingapp.database.MeetingsOpenHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +30,7 @@ import java.util.Map;
 public class NetworkStateChecker extends BroadcastReceiver {
 
     private Context context;
-    private GeoDataBaseHelper db;
+    private MeetingsOpenHelper db;
 
 
     @Override
@@ -36,7 +38,7 @@ public class NetworkStateChecker extends BroadcastReceiver {
 
         this.context = context;
 
-        db = new GeoDataBaseHelper(context);
+        db = new MeetingsOpenHelper(context);
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
@@ -52,7 +54,7 @@ public class NetworkStateChecker extends BroadcastReceiver {
                     do {
                         //calling the method to save the unsynced data to MySQL
                         saveGeoData(
-                                cursor.getInt(cursor.getColumnIndex(GeoDatabaseContract.GeoDataEntry._ID)),
+                                cursor.getInt(cursor.getColumnIndex(MeetingsDatabaseContract.MeetingsEntry._ID)),
                                 cursor.getString(cursor.getColumnIndex(GeoDatabaseContract.GeoDataEntry.COLUMN_IMAGE)),
                                 cursor.getString(cursor.getColumnIndex(GeoDatabaseContract.GeoDataEntry.COLUMN_DATE)),
                                 cursor.getString(cursor.getColumnIndex(GeoDatabaseContract.GeoDataEntry.COLUMN_TIME)),

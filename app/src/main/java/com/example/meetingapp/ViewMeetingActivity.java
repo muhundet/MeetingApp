@@ -128,7 +128,9 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
             @Override
             public void onClick(View v) {
                 //kunoda meeting id inobva paParcel remeeting ino, nePassword iri pakukokwa #hope
-                createjoinDialog();
+                getZoomMeetingDetails();
+                joinZoomMeeting(mZoomMeetingID, mZoomMeetingPassword);
+
             }
         });
 
@@ -317,7 +319,7 @@ public class ViewMeetingActivity extends AppCompatActivity implements InitAuthSD
                 String meetingID = meetingIDInput.getText().toString();
                 String password = passwordInput.getText().toString();
                 if (meetingID.trim().length() > 0 && password.trim().length() > 0) {
-                    joinZoomMeeting(meetingID, password);
+
                 }
             }
             dialog.dismiss();
