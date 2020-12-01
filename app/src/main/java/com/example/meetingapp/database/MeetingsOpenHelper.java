@@ -51,7 +51,5 @@ public class MeetingsOpenHelper extends SQLiteOpenHelper {
         return meetingsEntryCursor;
     }
 
-    public Cursor getUnsyncedRegister(){
-        return
-    }
+ 
 }

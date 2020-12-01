@@ -80,18 +80,26 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
     private String mMeetingDate;
     private String mMeetingTime;
     private long  mZoomMeetingID;
+    private String mZoomMeetingPassword;
+    private long mTeamsMeetingID;
+    private String mTeamsMeetingPassword;
     private boolean mIsZoomEnabled;
     private boolean mIsTeamsEnabled;
     private boolean mIsZoomMeetingScheduled;
     private boolean mIsTeamsMeetingScheduled;
+    public static final int ENTRY_SYNCED_WITH_SERVER = 1;
+    public static final int ENTRY_NOT_SYNCED_WITH_SERVER = 0;
     private Calendar mDate;
     EditText textMeetingTime;
     EditText textMeetingId;
+    public static final String URL_SAVE_MEETING = "http://192.168.1.107/meetingsEntry.php";
 
     Calendar calendar = Calendar.getInstance();
     TimePickerDialog.OnTimeSetListener timeSetListener;
-    private long mTeamsMeetingID;
+
     ZoomSDK mZoomSDK;
+    private String mMeetingOganiser;
+    private int mStatus;
 
 //    private ZoomSDKAuthenticationListener authListener = new ZoomSDKAuthenticationListener() {
 //        /**
@@ -193,6 +201,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
                     Log.d("ZOOM", ">>>>>>>>>>>>Now going to save database: ZoomID =" + mZoomMeetingID +"<<<<<<<<<<<<<<<<<<<<<<<");
                     //                      textMeetingId.setText(null);
+                    insertMeetings(new MeetingsOpenHelper(CreateMeetingActivity.this));
                     textAgenda.setText(null);
                     textVenue.setText(null);
                     textMeetingDate.setText(null);
@@ -394,7 +403,7 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
         values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_VENUE, mVenue);
         values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_DATE, mMeetingDate);
         values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_START_TIME, mMeetingTime);
-        values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_MEETING_ORGANISER, "ORGANISER");
+        values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_MEETING_ORGANISER, "mMeetingOganiser");
         values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_ZOOM_MEETING_ID, String.valueOf(mZoomMeetingID));
         values.put(MeetingsDatabaseContract.MeetingsEntry.COLUMN_ZOOM_MEETING_PASSWORD, "password");
 
@@ -461,10 +470,13 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
     private void saveMeetingToServer() {
         final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Saving Geo Data...");
+        progressDialog.setMessage("Saving Data...");
         progressDialog.show();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_SAVE_GEO_DATA,
+        final String mStatus = String.valueOf(ENTRY_SYNCED_WITH_SERVER);
+        final String mNotStatus = String.valueOf(ENTRY_NOT_SYNCED_WITH_SERVER);
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL_SAVE_MEETING,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -491,21 +503,25 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         progressDialog.dismiss();
-                        //on error storing the name to sqlite with status unsynced
-//                        saveNameToLocalStorage(mImage, mGeoDate, mGeoTime, mLatitude, mLongitude, mAltitude, GEO_DATA_NOT_SYNCED_WITH_SERVER);
-                        Log.i("TAG", ">>>>>>>>>>>>Geo data saved to local and synced = 0: NOT SAVED TO SERVER: VOLLEY ERR<<<<<<<<<<<<<" );
+
+                        Log.i("TAG", ">>>>>>>>>>>>data saved to local and synced = 0: NOT SAVED TO SERVER: VOLLEY ERR<<<<<<<<<<<<<" );
                         Log.e("HttpClient", "error: " + error.toString());
                     }
                 }) {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                params.put("image", mImage);
-                params.put("date", mGeoDate);
-                params.put("time", mGeoTime);
-                params.put("latitude", String.valueOf(mLatitude));
-                params.put("longitude", String.valueOf(mLongitude));
-                params.put("altitude", String.valueOf(mAltitude));
+                params.put("meeting_id", mMeetingId);
+                params.put("agenda", mAgenda);
+                params.put("venue", mVenue);
+                params.put("start_time", mMeetingTime);
+                params.put("meeting_date", mMeetingDate);
+                params.put("meeting_organiser", mMeetingOganiser);
+                params.put("zoom_meeting_id", String.valueOf(mZoomMeetingID));
+                params.put("zoom_meeting_password", mZoomMeetingPassword);
+                params.put("teams_meeting_id", String.valueOf(mTeamsMeetingID));
+                params.put("teams_meeting_password", mTeamsMeetingPassword);
+                params.put("status", String.valueOf(mStatus));
                 return params;
             }
         };
@@ -515,7 +531,3 @@ public class CreateMeetingActivity extends AppCompatActivity implements AuthCons
 
 
 }
-
-
-
-
